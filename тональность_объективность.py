@@ -12,7 +12,7 @@ def analyze_sentiment(text, language):
     polarity = blob.sentiment.polarity
     subjectivity = blob.sentiment.subjectivity
 
-if polarity > 0:
+    if polarity > 0:
         tone = "позитивный"
     elif polarity < 0:
         tone = "негативный"
