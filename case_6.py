@@ -7,78 +7,64 @@ from langdetect import detect
 from deep_translator import GoogleTranslator
 
 
-def sentn(text):
-    sentences = re.split(r'[.!?]+', text)  # + означает один или более подряд
-    sentences = [s for s in sentences if s.strip() != '']  # берем только непустые строки
+def split_sentences(text):
+    """Разделить текст на предложения."""
+    sentences = re.split(r'[.!?]+', text)
+    sentences = [s for s in sentences if s.strip() != '']
     return sentences
 
 
-def worrds(text):
+def split_words(text):
+    """Разделить текст на слова."""
     words = re.findall(r'\w+(?:-\w+)*', text)
     return words
 
 
-def count_slogs(words):
-    slogs = 0
+def count_syllables(words):
+    """Подсчитать количество слогов в словах."""
+    syllables = 0
     for word in words:
         for letter in word.lower():
-            if letter in GLASNY:
-                slogs += 1
-    return slogs
+            if letter in VOWELS:
+                syllables += 1
+    return syllables
 
 
-def def_lang(text):
+def detect_language(text):
+    """Определить язык текста."""
     language = detect(text)
     return language
 
 
-def analyze_sentiment(text, language):
+def calculate_flesch_index(avg_sentence_length, avg_syllables_per_word, language):
+    """Рассчитать индекс удобочитаемости Флеша."""
     if language == 'en':
-        blob = TextBlob(text)
+        return 206.835 - 1.015 * avg_sentence_length - 84.6 * avg_syllables_per_word
     else:
-        blob = TextBlob(text)
-        blob = blob.translate(to='en')
-
-    polarity = blob.sentiment.polarity
-    subjectivity = blob.sentiment.subjectivity
-
-    if polarity > 0:
-        tone = "позитивный"
-    elif polarity < 0:
-        tone = "негативный"
-    else:
-        tone = "нейтральный"
-
-    return tone, subjectivity
+        return 206.835 - 1.3 * avg_sentence_length - 60.1 * avg_syllables_per_word
 
 
-def flesh_index(av_sentn_len, av_slogs_per_word):
-    language = detect(text)
-    if language == 'en':
-        return 206.835 - 1.015 * av_sentn_len - 84.6 * av_slogs_per_word
-    else:
-        return 206.835 - 1.3 * av_sentn_len - 60.1 * av_slogs_per_word
-
-
-def f_readability(flesh):
-    if flesh > 80:
+def get_readability_level(flesch_score):
+    """Определить уровень читаемости по индексу Флеша."""
+    if flesch_score > 80:
         return "Текст очень легко читается (для младших школьников)."
-    elif flesh > 50:
+    elif flesch_score > 50:
         return "Простой текст (для школьников)."
-    elif flesh > 25:
+    elif flesch_score > 25:
         return "Текст немного трудно читать (для студентов)."
     else:
         return "Текст трудно читается (для выпускников ВУЗов)."
 
 
 def translate_text(text, target_language='en'):
+    """Перевести текст на указанный язык."""
     translator = GoogleTranslator(source='auto', target=target_language)
     return translator.translate(text)
 
 
 def analyze_sentiment(text):
+    """Проанализировать тональность текста."""
     english_text = translate_text(text, 'en')
-
     analysis = TextBlob(english_text)
     polarity = analysis.sentiment.polarity
     subjectivity = analysis.sentiment.subjectivity
@@ -93,44 +79,44 @@ def analyze_sentiment(text):
     return {
         "sentiment": sentiment,
         "subjectivity": subjectivity,
-        "objectivity_percent": (1 - subjectivity) * 100,
-        "subjectivity_percent": subjectivity * 100
+        "objectivity_percent": (1 - subjectivity) * 100
     }
 
 
 def main():
-    av_sentn_len = len(worrds(text)) / len(sentn(text))
-    av_slogs_per_word = count_slogs(worrds(text)) / len(worrds(text))
+    """Основная функция анализа текста."""
+    sentences = split_sentences(text)
+    words_list = split_words(text)
+    language = detect_language(text)
 
-    language = def_lang(text)
-    sentences = sentn(text)
-    words_list = worrds(text)
+    avg_sentence_length = len(words_list) / len(sentences)
+    total_syllables = count_syllables(words_list)
+    avg_syllables_per_word = total_syllables / len(words_list)
 
-    av_sentn_len = len(words_list) / len(sentences) if sentences else 0
-    av_slogs_per_word = count_slogs(words_list) / len(words_list) if words_list else 0
+    flesch_score = calculate_flesch_index(
+        avg_sentence_length,
+        avg_syllables_per_word,
+        language
+    )
+    readability = get_readability_level(flesch_score)
+    sentiment_results = analyze_sentiment(text)
 
-    flesh = flesh_index(av_sentn_len, av_slogs_per_word)
-    readability = f_readability(flesh)
-
-    results=analyze_sentiment(text)
-
-    print("Предложений:", len(sentn(text)))
-    print("Слов:", len(worrds(text)))
-    print("Слогов:", count_slogs(worrds(text)))
-    print("Средняя длина предложения (в словах):", round(av_sentn_len, 3))
-    print("Средняя длина слова (в слогах):", round(av_slogs_per_word, 2))
-    print("Индекс удобчитаемости Флеша:", round(flesh, 2))
+    print("Анализ текста:")
+    print("Предложений:", len(sentences))
+    print("Слов:", len(words_list))
+    print("Слогов:", total_syllables)
+    print("Средняя длина предложения (в словах):", round(avg_sentence_length, 3))
+    print("Средняя длина слова (в слогах):", round(avg_syllables_per_word, 2))
+    print("Индекс удобочитаемости Флеша:", round(flesch_score, 2))
     print("Читаемость:", readability)
-    print(f"Тональность: {results['sentiment']}")
-    print(f"Объективность: {results['objectivity_percent']}%")
+    print(f"Тональность текста: {sentiment_results['sentiment']}")
+    print(f"Объективность: {round(sentiment_results['objectivity_percent'], 1)}%")
 
 
-
-
-
-GLASNY = "ёeyuioaуеыаоэяи"
-text = input(("Введите текст: "))
+VOWELS = "ёeyuioaуеыаоэяи"
+text = input("Введите текст: ")
 
 if __name__ == "__main__":
     main()
+
 
