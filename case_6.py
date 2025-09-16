@@ -8,20 +8,26 @@ from deep_translator import GoogleTranslator
 
 
 def split_sentences(text):
-    """Разделить текст на предложения."""
+    """
+    Divides the text into sentences.
+    """
     sentences = re.split(r'[.!?]+', text)
     sentences = [s for s in sentences if s.strip() != '']
     return sentences
 
 
 def split_words(text):
-    """Разделить текст на слова."""
+    """
+    Splits text into words.
+    """
     words = re.findall(r'\w+(?:-\w+)*', text)
     return words
 
 
 def count_syllables(words):
-    """Подсчитать количество слогов в словах."""
+    """
+    Counts the number of syllables in words.
+    """
     syllables = 0
     for word in words:
         for letter in word.lower():
@@ -31,13 +37,17 @@ def count_syllables(words):
 
 
 def detect_language(text):
-    """Определить язык текста."""
+    """
+    Defines the language of the text.
+    """
     language = detect(text)
     return language
 
 
 def calculate_flesch_index(avg_sentence_length, avg_syllables_per_word, language):
-    """Рассчитать индекс удобочитаемости Флеша."""
+    """
+    Calculates the Flash Readability Index.
+    """
     if language == 'en':
         return 206.835 - 1.015 * avg_sentence_length - 84.6 * avg_syllables_per_word
     else:
@@ -45,7 +55,9 @@ def calculate_flesch_index(avg_sentence_length, avg_syllables_per_word, language
 
 
 def get_readability_level(flesch_score):
-    """Определить уровень читаемости по индексу Флеша."""
+    """
+    Determines the level of readability according to the Flesch index.
+    """
     if flesch_score > 80:
         return "Текст очень легко читается (для младших школьников)."
     elif flesch_score > 50:
@@ -57,13 +69,17 @@ def get_readability_level(flesch_score):
 
 
 def translate_text(text, target_language='en'):
-    """Перевести текст на указанный язык."""
+    """
+    Translates text into the specified language.
+    """
     translator = GoogleTranslator(source='auto', target=target_language)
     return translator.translate(text)
 
 
 def analyze_sentiment(text):
-    """Проанализировать тональность текста."""
+    """
+    Analyzes the tonality of the text.
+    """
     english_text = translate_text(text, 'en')
     analysis = TextBlob(english_text)
     polarity = analysis.sentiment.polarity
@@ -84,7 +100,9 @@ def analyze_sentiment(text):
 
 
 def main():
-    """Основная функция анализа текста."""
+    """
+    The main function of text analysis.
+    """
     sentences = split_sentences(text)
     words_list = split_words(text)
     language = detect_language(text)
@@ -118,3 +136,4 @@ text = input("Введите текст: ")
 
 if __name__ == "__main__":
     main()
+
