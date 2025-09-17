@@ -137,4 +137,3 @@ text = input("Введите текст: ")
 if __name__ == "__main__":
     main()
 
-
