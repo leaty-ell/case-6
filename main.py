@@ -85,7 +85,7 @@ def analyze_sentiment(text):
     polarity = analysis.sentiment.polarity
     subjectivity = analysis.sentiment.subjectivity
 
-    if -1 <= polarity < -0,33 :
+    if -1 <= polarity < -0.33 :
         sentiment = "негативная"
     elif 0.33 < polarity <= 1:
         sentiment = "позитивная"
@@ -136,5 +136,6 @@ text = input("Введите текст: ")
 
 if __name__ == "__main__":
     main()
+
 
 
